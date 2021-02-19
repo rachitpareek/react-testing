@@ -1,54 +1,38 @@
 import React from 'react';
-import BooksList from '../books/BooksList.js';
 import { getZillowPrice } from '../../services/api';
+import { connect } from 'react-redux';
 
 class CashFlowComponent extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            zillowURL: undefined,
-            propertyPrice: undefined,
-            propertyTax: undefined,
-            homeInsurance: undefined,
-            maintPMT: undefined,
-            hoaPMT: undefined,
-            utilitiesPMT: undefined,
-            mgrPMT: undefined,
+            zillowURL: props.zillowURL,
+            propertyTax: 0,
+            homeInsurance: 0,
+            maintPMT: 0,
+            hoaPMT: 0,
+            utilitiesPMT: 0,
+            mgrPMT: 0,
             details: [
-                ['Annual Property Tax %', 'propertyTax', (val) => this.state.propertyPrice * (val / 100)],
-                ['Annual Home Insurance Payment', 'homeInsurance', (val) => val / 12],
-                ['Annual Maintenance Payment', 'maintPMT', (val) => val / 12],
-                ['Annual HOA Payment', 'hoaPMT', (val) => val / 12],
-                ['Monthly Utilities Payment', 'utilitiesPMT', (val) => this.state.propertyPrice * val],
-                ['Monthly Property Manager Payment', 'mgrPMT', (val) => this.state.propertyPrice * val]
+                ['Annual Property Tax %', 'propertyTax', (val) => (this.props.price * (Number(val) / 100)) / 12],
+                ['Annual Home Insurance Payment', 'homeInsurance', (val) => Number(val) / 12],
+                ['Annual Maintenance Payment', 'maintPMT', (val) => Number(val) / 12],
+                ['Annual HOA Payment', 'hoaPMT', (val) => Number(val) / 12],
+                ['Monthly Utilities Payment', 'utilitiesPMT', (val) => Number(val)],
+                ['Monthly Property Manager Payment', 'mgrPMT', (val) => Number(val)]
             ]
         };
         this.onFormChange = this.onFormChange.bind(this);
         this.onFormSubmit = this.onFormSubmit.bind(this);
-        this.getZillowPropertyPrice = this.getZillowPropertyPrice.bind(this);
     }
 
-    async getZillowPropertyPrice(e) {
-        this.setState({ propertyPrice: "Loading..." });
-        e.preventDefault();
-        var data = await getZillowPrice(e.target.zillowURL.value);
-        var price = await data.text().then(text => {
-            text = text.replaceAll(',', '');
-            text = text.slice(text.indexOf("$"));
-            text = text.replaceAll('$', '');
-            var numbers = text.match(/\d+/g);
-            var price = Number(numbers[0]);
-            return price;
-        });
-        this.setState({ propertyPrice: price });
-    }
-
-    onFormChange(event) {
+    async onFormChange(event) {
         if (event.target.name === "zillowURL") {
-            this.setState({ [event.target.name]: event.target.value });
+            this.setState({ "zillowURL": event.target.value });
+            this.props.dispatch({ type: 'ZILLOW_PRICE_REQUESTED', "zillowURL": event.target.value });
         } else {
-            this.setState({ [event.target.name]: Number(event.target.value) });
+            this.setState({ [event.target.name]: event.target.value });
         }
     }
 
@@ -80,7 +64,6 @@ class CashFlowComponent extends React.Component {
   <input className="form-control text-center" type="text" name="zillowURL" value={this.state.zillowURL} onChange={this.onFormChange} />
                                         </label>
                                     </div>
-                                    <input type="submit" className="btn btn-primary" value="Extract" />
                                 </form>
                             </div>
                         </div>
@@ -92,7 +75,7 @@ class CashFlowComponent extends React.Component {
                                 <h5 className="card-title">Input Details</h5>
                                 {this.state.details.map((detail) => {
                                     return (
-                                        <div className="form-group">
+                                        <div key={detail[0]} className="form-group">
                                             <label>
                                                 {detail[0]}
                                                 <input className="form-control text-center" type="text" name={detail[1]} value={this.state[detail[1]]} onChange={this.onFormChange} />
@@ -109,22 +92,32 @@ class CashFlowComponent extends React.Component {
                     <div className="col-8">
                         <div className="card">
                             <div className="card-body">
-                                <h3>Property Price: {this.state.propertyPrice}</h3>
+                                <h3>Property Price: {this.props.price}</h3>
                                 <hr></hr>
-                                <h5 className="card-title">Monthly Cash Flows</h5>
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Category</th>
-                                            <th scope="col">Value</th>
-                                        </tr>
-                                    </thead>
+                                {
+                                    !this.props.price &&
+                                    <h5 className="card-title">Enter a URL to View Monthly Cash Flows...</h5>
+                                }
+                                {
+                                    this.props.price &&
+                                    <h5 className="card-title">Monthly Cash Flows:</h5>
+                                }
+                                <table className="table">
+                                    {
+                                        this.props.price &&
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Category</th>
+                                                <th scope="col">Value</th>
+                                            </tr>
+                                        </thead>
+                                    }
                                     <tbody>
 
                                         {this.state.details.map((detail) => {
                                             return (
-                                                this.state.propertyPrice &&
-                                                this.state[detail[1]] &&
+                                                this.props.price &&
+                                                this.state[detail[1]] !== undefined &&
                                                 <tr>
                                                     <td scope="row">{detail[0]}</td>
                                                     <td>{detail[2](this.state[detail[1]])}</td>
@@ -132,6 +125,21 @@ class CashFlowComponent extends React.Component {
                                             );
                                         })}
                                     </tbody>
+                                    {
+                                        this.props.price &&
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Total Outflows</th>
+                                                <th scope="col">{
+                                                    this.state.details.map((detail) => {
+                                                        console.log(detail)
+                                                        console.log(detail[2](this.state[detail[1]]))
+                                                        return detail[2](this.state[detail[1]]);
+                                                    }).reduce((a, b) => a + b, 0)
+                                                }</th>
+                                            </tr>
+                                        </thead>
+                                    }
                                 </table>
                             </div>
                         </div>
@@ -140,8 +148,11 @@ class CashFlowComponent extends React.Component {
             </div>
         );
     }
-
-
 }
 
-export default CashFlowComponent;
+const mapStateToProps = (state) => {
+    const { zillowURL, price } = state.cashflow;
+    return { zillowURL, price };
+};
+
+export const CashFlow = connect(mapStateToProps)(CashFlowComponent);

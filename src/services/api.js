@@ -1,4 +1,4 @@
-const CORS_URL = 'https://thingproxy.freeboard.io/fetch/'
+const CORS_URL = 'http://cors-anywhere.herokuapp.com/'
 
 function getData(url) {
     return fetch(url)

@@ -8,7 +8,7 @@ class NavbarComponent extends React.Component {
             links: [
                 ["Home", ""],
                 ["Books List", "books"],
-                ["Cash Flow", "cashflow"], 
+                ["Cash Flow", "cashflow"],
                 ["Counter", "counter"]
             ]
         }

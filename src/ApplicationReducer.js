@@ -1,18 +1,8 @@
-function ApplicationReducer(state, action) {
+import { combineReducers } from 'redux';
+import { CounterReducer } from './components/counter/CounterReducer';
+import { CashFlowReducer } from './components/cashflow/CashFlowReducer';
 
-    if (typeof state === 'undefined') {
-      return {count : 0};
-    }
-
-    switch (action.type) {
-      case 'INCREMENT':
-        return {count: state.count + 1}
-      case 'DECREMENT':
-        return {count: state.count - 1}
-      default:
-        return state
-    }
-
-  }
-
-export { ApplicationReducer };
+export const ApplicationReducer = combineReducers({
+  counter: CounterReducer,
+  cashflow: CashFlowReducer
+});

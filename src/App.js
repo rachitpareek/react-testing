@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import BooksComponent from './components/books/BooksComponent';
 import NavbarComponent from './components/utilities/NavbarComponent';
 import CounterComponent from './components/counter/CounterComponent';
-import CashFlowComponent from './components/cashflow/CashFlowComponent'
+import { CashFlow } from './components/cashflow/CashFlowComponent'
 
 class AppComponent extends React.Component {
 
@@ -27,7 +27,7 @@ class AppComponent extends React.Component {
 
           <NavbarComponent />
 
-          <h6 className="alert alert-success mt-3">This app uses React, React-Router-DOM, Redux, and Bootstrap.</h6>
+          <h6 className="alert alert-success mt-3">This app uses React, React-Router-DOM, Redux, Saga, and Bootstrap.</h6>
 
           <Switch>
             <Route exact path="/">
@@ -37,7 +37,7 @@ class AppComponent extends React.Component {
               <BooksComponent />
             </Route>
             <Route path="/cashflow">
-              <CashFlowComponent />
+              <CashFlow />
             </Route>
             <Route path="/counter">
               <CounterComponent />
@@ -53,5 +53,4 @@ class AppComponent extends React.Component {
 
 }
 
-const App = connect()(AppComponent);
-export default App; 
+export const App = connect()(AppComponent);; 
